@@ -1,0 +1,14 @@
+langchain
+langchain-google
+pydantic
+python-dotenv
+langgraph
+wikipedia
+langchain-community
+langchain_google_genai
+langchain_groq
+tavily-python
+streamlit
+langchain_tavily
+langgraph
+grandalf
