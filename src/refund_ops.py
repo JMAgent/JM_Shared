@@ -80,10 +80,10 @@ def build_conversation(question: str, answer: str, followup: str) -> list:
 
     # 2. User Message
     Humanmessage_1 = HumanMessage(content=f"{question}")
-    AIMessage  = AIMessage(content=f"{answer}")
+    AIMessage_1  = AIMessage(content=f"{answer}")
     Humanmessage_2 = HumanMessage(content=f"{followup}")
 
-    messages =[Systemmessage, Humanmessage_1, AIMessage, Humanmessage_2 ]   
+    messages =[Systemmessage, Humanmessage_1, AIMessage_1, Humanmessage_2 ]   
 
     return messages
     
