@@ -125,7 +125,7 @@ def refund_prompt(amount: int, reason: str) -> str:
     return (f"hypothetical refund requst placed for the amount {amount} and with the reason {reason}")
     
 
-async def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
+def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> ToolMessage:
     """
     Run a tool and wrap the result in a ToolMessage.
 
@@ -135,29 +135,19 @@ async def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> An
 
     Set tool_call_id on the ToolMessage.
     """
-    SERVER_PATH = Path(__file__).with_name("refund_ops.py")
-    client = MultiServerMCPClient(
-      {
-        "Refund Desk": {
-          "command": sys.executable,
-          "args": [str(SERVER_PATH)],
-          "transport": "stdio",
-        },
-      }
-        )
-    tools = await client.get_tools()
-    selected_tool = next((item for item in tools if item.name == tool_name), None)
-    if selected_tool is None:
-      raise KeyError(f"Unknown tool: {tool_name}")
-
-    tool_result = await selected_tool.ainvoke(args)
-    msg = "ToolMessage(" + str(ToolMessage(
-      content=str(tool_result),
-      tool_call_id=tool_call_id,
-      name=tool_name,
-    ))+")"
+    if tool_name == "add":
+        content = str(int(args["a"]) + int(args["b"]))
+    elif tool_name == "estimate_refund":
+        content = estimate_refund(int(args["amount"]))
+    else:
+        raise KeyError(f"Unknown tool: {tool_name}")
+    msg = "ToolMessage : (" +str(ToolMessage(
+        content=content,
+        tool_call_id=tool_call_id,
+        name=tool_name,
+    )) + ")"
     #print(msg)
-    return msg
+    return  msg
 
 # step 1 -  Define the state
 class FoodState(TypedDict):
