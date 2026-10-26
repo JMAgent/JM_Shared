@@ -151,11 +151,13 @@ async def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> An
       raise KeyError(f"Unknown tool: {tool_name}")
 
     tool_result = await selected_tool.ainvoke(args)
-    return ToolMessage(
+    msg = "ToolMessage(" + str(ToolMessage(
       content=str(tool_result),
       tool_call_id=tool_call_id,
       name=tool_name,
-    )
+    ))+")"
+    #print(msg)
+    return msg
 
 # step 1 -  Define the state
 class FoodState(TypedDict):
