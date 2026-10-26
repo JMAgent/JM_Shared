@@ -129,7 +129,7 @@ def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
         tool_message = ""
         raise KeyError("Invalid Tool Name")
     
-    tool_message = conversation.append(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
+    tool_message = conversation + str(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
     
     return tool_message    
 
