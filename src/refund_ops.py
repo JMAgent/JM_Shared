@@ -61,15 +61,17 @@ def estimate_model(amount: int) -> Any:
     fee and net use the same rounding as estimate_refund.
     note must contain the word "hypothetical" (any casing is fine, but include the word).
     """
-    Refund_Estimate = RefundEstimate()
+    
     fee = round(amount * 0.02, 2)
-    Refund_Estimate = {
+    Refund  = {
         "amount" : amount,
         "fee" : fee ,
         "net" : round(amount - fee , 2),
         "note" : "hypothetical estimated refund is provided"  
     }   
- 
+
+    Refund_Estimate = RefundEstimate(**Refund)
+    #print("Refund : ",Refund_Estimate)
     return Refund_Estimate
 
 
@@ -138,7 +140,7 @@ def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
     
     ToolMessage =  str(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
     #print(f"{ToolMessage}")
-    return (ToolMessage)    
+    return ("ToolMessage")    
 
 
 
@@ -564,7 +566,7 @@ def build_mcp_server():
 
     @mcp.prompt()
     def ask_about_topic(topic: str) -> str:
-        return f"Tell me about {topic}."
+        return f"Tell me about the topic :  {topic}."
 
     return mcp
 
