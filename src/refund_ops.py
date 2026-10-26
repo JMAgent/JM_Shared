@@ -61,9 +61,14 @@ def estimate_model(amount: int) -> Any:
     fee and net use the same rounding as estimate_refund.
     note must contain the word "hypothetical" (any casing is fine, but include the word).
     """
-    estimate_refund = round(amount- (amount *0.05), 2)
-    # deduct 5% of amount  before giving the refund
-    return f"hypothetical estimated refund is {estimate_refund} "
+    Refund_Estimate = RefundEstimate()
+
+    Refund_Estimate.amount = amount
+    Refund_Estimate.fee = round(amount * 0.02, 2)
+    Refund_Estimate.net = round(amount - Refund_Estimate.fee , 2)
+    Refund_Estimate.note = "hypothetical estimated refund is provided"  
+ 
+    return Refund_Estimate
 
 
 def build_conversation(question: str, answer: str, followup: str) -> list:
@@ -474,10 +479,10 @@ def build_refund_graph(checkpointer):
     #Step 3 : Define the Graph and add nodes
     builder4 = StateGraph(refundgraph)
     builder4.add_node('validate_request',validate_request)
-    builder4.add_node('route_after_validate',route_after_validate)
+    #builder4.add_node('route_after_validate',route_after_validate)
     builder4.add_node('automatic_approval',automatic_approval)
     builder4.add_node('manager_review',manager_review)
-    builder4.add_node('post_manager_review',post_manager_review)
+    #builder4.add_node('post_manager_review',post_manager_review)
     builder4.add_node('execute_refund',execute_refund)
     builder4.add_node('reject_refund',reject_refund)
 
@@ -489,9 +494,8 @@ def build_refund_graph(checkpointer):
                                 }
                                   )
     builder4.add_edge('automatic_approval','execute_refund')
-    builder4.add_edge('manager_review','post_manager_review')
     builder4.add_conditional_edges(
-      'post_manager_review',
+      'manager_review',
       post_manager_review,
       {
         'execute_refund': 'execute_refund',
@@ -504,7 +508,6 @@ def build_refund_graph(checkpointer):
 
     #Step 5 : Compile the graph
     
-    checkpointer = InMemorySaver()
     graph4 = builder4.compile(checkpointer = checkpointer)
     #config_1 = {"configurable" : {"thread_id" : "1"}}
     graph4.get_graph().print_ascii()
@@ -519,6 +522,7 @@ def make_sqlite_checkpointer(db_path: str):
     """
     conn = sqlite3.connect(db_path, check_same_thread=False)
     memory = SqliteSaver(conn)
+    print("SQLite checkpoint should still be waiting on the manager review")
     return memory
 
 
@@ -538,7 +542,7 @@ def build_mcp_server():
     Prompt
       ask_about_topic(topic: str) -> a string that contains topic
     """
-    mcp = FastMCP("Refund_Desk")
+    mcp = FastMCP("Refund Desk")
 
     @mcp.tool()
     async def add(a: int, b: int) -> int:
