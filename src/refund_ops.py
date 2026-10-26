@@ -540,11 +540,11 @@ def build_mcp_server():
     """
     mcp = FastMCP("Refund_Desk")
 
-    @mcp.tools()
+    @mcp.tool()
     async def add(a: int, b: int) -> int:
         return (a+b)
 
-    @mcp.tools()
+    @mcp.tool()
     async def estimate_refund(amount: int) -> str:
         estimate_refund()
         
