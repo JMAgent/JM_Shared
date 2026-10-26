@@ -62,11 +62,13 @@ def estimate_model(amount: int) -> Any:
     note must contain the word "hypothetical" (any casing is fine, but include the word).
     """
     Refund_Estimate = RefundEstimate()
-
-    Refund_Estimate.amount = amount
-    Refund_Estimate.fee = round(amount * 0.02, 2)
-    Refund_Estimate.net = round(amount - Refund_Estimate.fee , 2)
-    Refund_Estimate.note = "hypothetical estimated refund is provided"  
+    fee = round(amount * 0.02, 2)
+    Refund_Estimate = {
+        "amount" : amount,
+        "fee" : fee ,
+        "net" : round(amount - fee , 2),
+        "note" : "hypothetical estimated refund is provided"  
+    }   
  
     return Refund_Estimate
 
@@ -81,14 +83,14 @@ def build_conversation(question: str, answer: str, followup: str) -> list:
       4. HumanMessage content = followup
     """    
     # 1. System Message
-    Systemmessage = SystemMessage(content="You are a helpful assistant that answers every question with a joke.")
+    Systemmessage_1 = SystemMessage(content="You are a helpful assistant that answers every question with a joke.")
 
     # 2. User Message
     Humanmessage_1 = HumanMessage(content=f"{question}")
     AIMessage_1  = AIMessage(content=f"{answer}")
     Humanmessage_2 = HumanMessage(content=f"{followup}")
 
-    messages =[Systemmessage, Humanmessage_1, AIMessage_1, Humanmessage_2 ]   
+    messages =[Systemmessage_1, Humanmessage_1, AIMessage_1, Humanmessage_2 ]   
 
     return messages
     
@@ -124,19 +126,19 @@ def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
 
     Set tool_call_id on the ToolMessage.
     """
-    conversation =""
+     
     if tool_name == "add":
         tool_result = str(int(args["a"]) + int(args["b"]))             
          
     elif tool_name == "estimate_refund":
         tool_result = estimate_refund(int(args["amount"]))         
     else :
-        tool_message = ""
+        ToolMessage = ""
         raise KeyError("Invalid Tool Name")
     
-    tool_message = conversation + str(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
-    
-    return tool_message    
+    ToolMessage =  str(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
+    #print(f"{ToolMessage}")
+    return (ToolMessage)    
 
 
 
@@ -148,7 +150,7 @@ class FoodState(TypedDict):
     favorite_food: str
 # step 2 - Define the node
 def prepare_question(state: FoodState):
-    return {"question": f"What is the favorite food of {state['city']}"}
+    return {"question": f"What is the favorite food of {state['city']}?"}
 
 def answer(state: FoodState):
     if state['city'] == 'Mumbai':
