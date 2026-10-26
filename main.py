@@ -3,25 +3,28 @@ from __future__ import annotations
 
 from dotenv import load_dotenv
 from langgraph.checkpoint.memory import InMemorySaver
+import asyncio
 
 from src.refund_ops import (
     build_food_graph,
     build_refund_graph,
     build_review_loop,
     build_support_graph,
+    #apply_tool_result,
 )
 
 
 def main() -> int:
     load_dotenv()    
+    #asyncio.run(apply_tool_result ("add",{"a":3,"b":2},"ABCD" ))
+    #print(refund_prompt(500,"duplicate"))
     food = build_food_graph().invoke({"city": "Mysore"})    
     
     support = build_support_graph().invoke(
         {"text": "My computer is not working. It's urgent.", "log": []}
     )
-    
     review = build_review_loop().invoke({"draft": "", "attempts": 0, "history": []})
-    
+    print(review)
     refund = build_refund_graph(InMemorySaver()).invoke(
         {
             "request_id": "r-auto",

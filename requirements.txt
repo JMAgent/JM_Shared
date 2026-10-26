@@ -27,3 +27,5 @@ langchain_mcp_adapters
 grandalf
 langgraph.checkpoint.sqlite
 langchain
+pathlib
+asyncio

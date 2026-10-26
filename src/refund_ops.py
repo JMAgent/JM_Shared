@@ -17,14 +17,19 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.types import interrupt, Command
+from langchain_core.messages import ToolMessage
 from langchain_groq import ChatGroq
 from langchain.tools import tool
 from dotenv import load_dotenv
 import os
+import sys
 import operator
 import uuid
 import sqlite3
 from mcp.server.fastmcp import FastMCP
+from pathlib import Path
+from langchain_mcp_adapters.client import MultiServerMCPClient
+import asyncio
 
 
 
@@ -110,15 +115,17 @@ def refund_prompt(amount: int, reason: str) -> str:
     chat_template = ChatPromptTemplate.from_messages (
         [
           ("system", "You are a refund assistant. Explain that the fee is hypothetical."),
-          ("human", f"Amount: {amount}\\nReason: {reason}"),
+          ("human", f"Amount: {amount}, Reason: {reason}"),
               
         ]
         )
-    prompt = chat_template.invoke({"prompt": "Prepare a one line statement for the refund  amount, and the given reason, and includethe word 'hypothetical' in your statement."})
-    return prompt
+    #prompt = chat_template.invoke({"prompt": "Prepare a one line statement for the refund  amount, and the given reason, and includethe word 'hypothetical' in your statement."})
+    prompt = chat_template.invoke({"amount" : {amount} ,"reason" : {reason}})
+    #print(prompt)
+    return (f"hypothetical refund requst placed for the amount {amount} and with the reason {reason}")
     
 
-def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
+async def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
     """
     Run a tool and wrap the result in a ToolMessage.
 
@@ -128,22 +135,27 @@ def apply_tool_result(tool_name: str, args: dict, tool_call_id: str) -> Any:
 
     Set tool_call_id on the ToolMessage.
     """
-     
-    if tool_name == "add":
-        tool_result = str(int(args["a"]) + int(args["b"]))             
-         
-    elif tool_name == "estimate_refund":
-        tool_result = estimate_refund(int(args["amount"]))         
-    else :
-        ToolMessage = ""
-        raise KeyError("Invalid Tool Name")
-    
-    ToolMessage =  str(f"ToolMessage(content=str({tool_result}),tool_call_id={tool_call_id},name={tool_name})")
-    #print(f"{ToolMessage}")
-    return ("ToolMessage")    
+    SERVER_PATH = Path(__file__).with_name("refund_ops.py")
+    client = MultiServerMCPClient(
+      {
+        "Refund Desk": {
+          "command": sys.executable,
+          "args": [str(SERVER_PATH)],
+          "transport": "stdio",
+        },
+      }
+        )
+    tools = await client.get_tools()
+    selected_tool = next((item for item in tools if item.name == tool_name), None)
+    if selected_tool is None:
+      raise KeyError(f"Unknown tool: {tool_name}")
 
-
-
+    tool_result = await selected_tool.ainvoke(args)
+    return ToolMessage(
+      content=str(tool_result),
+      tool_call_id=tool_call_id,
+      name=tool_name,
+    )
 
 # step 1 -  Define the state
 class FoodState(TypedDict):
@@ -550,24 +562,31 @@ def build_mcp_server():
 
     @mcp.tool()
     async def add(a: int, b: int) -> int:
-        return a + b
+      return a + b
 
     @mcp.tool(name="estimate_refund")
     async def estimate_refund_tool(amount: int) -> str:
-        return estimate_refund(amount)
+      return estimate_refund(amount)
 
     @mcp.resource("resource://greeting")
     def greeting() -> str:
-        return "Hello from FastMCP Resources!"
+      return "Hello from FastMCP Resources!"
 
     @mcp.resource("data://config")
     def config() -> str:
-        return '{"theme": "dark", "features": ["tools"]}'
+      return '{"theme": "dark", "features": ["tools"]}'
 
     @mcp.prompt()
     def ask_about_topic(topic: str) -> str:
-        return f"Tell me about the topic :  {topic}."
+      return f"Tell me about the topic: {topic}."
 
     return mcp
+
+if __name__ == "__main__":
+    build_mcp_server().run(transport="stdio")
+
+
+
+
 
 
