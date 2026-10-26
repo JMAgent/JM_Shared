@@ -402,7 +402,7 @@ def manager_review(state:refundgraph):
         decision ="rejected"
     return {
         "decision":decision,
-        "audit": f"Manager Review: amount {amount} , Approval is {human_response}"
+        "audit": [f"Manager Review: amount {amount} , Approval is {human_response}"]
         
     }
 
