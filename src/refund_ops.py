@@ -301,11 +301,11 @@ def write_node(state : ReviewLoopState):
 def evaluate_node(state : ReviewLoopState):
   if len(state["draft"].split()) >= 8 :
     return{
-              "history" : ["Quality check passed: true"]
+              "history" : ["Quality check passed: True"]
           }
   else :
     return{
-            "history" : ["Quality check passed: false"]
+            "history" : ["Quality check passed: False"]
           }
 
 def route_after_evaluate(state: ReviewLoopState):
@@ -373,7 +373,7 @@ class refundgraph(TypedDict):
 #Step 2 : Define the Nodes
 def validate_request(state:refundgraph):
     amount = state["amount"]
-    if amount < 0:
+    if amount <= 0:
         raise ValueError("Refund amount must be greater than 0")
     else :
         return {
@@ -546,10 +546,24 @@ def build_mcp_server():
 
     @mcp.tool()
     async def add(a: int, b: int) -> int:
-        return (a+b)
+        return a + b
 
-    @mcp.tool()
-    async def estimate_refund(amount: int) -> str:
-        estimate_refund()
-        
-      
+    @mcp.tool(name="estimate_refund")
+    async def estimate_refund_tool(amount: int) -> str:
+        return estimate_refund(amount)
+
+    @mcp.resource("resource://greeting")
+    def greeting() -> str:
+        return "Hello from FastMCP Resources!"
+
+    @mcp.resource("data://config")
+    def config() -> str:
+        return '{"theme": "dark", "features": ["tools"]}'
+
+    @mcp.prompt()
+    def ask_about_topic(topic: str) -> str:
+        return f"Tell me about {topic}."
+
+    return mcp
+
+
