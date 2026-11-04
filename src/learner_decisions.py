@@ -22,7 +22,7 @@ def load_settings(values: dict | None = None) -> Settings:
                     total_token_budget=  6000,
                     reserve_tokens= 2000,  
                     approval_ttl_seconds= 900)
-    elif int(values.get("max_model_calls")) < 1:
+    elif (values.get("max_model_calls") == '') or (int(values.get("max_model_calls")) < 1):
             raise ValueError("at least 1")
     else :
         return Settings(
