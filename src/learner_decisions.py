@@ -41,8 +41,8 @@ def check_access(principal, tenant_id: str):
     if (principal.tenant_id != tenant_id) or ("case:read" not in principal.permissions):
         return (failed (
             "ACCESS_DENIED", "You are not allowed to read this case.",
-             "Please check your permissions and tenant.",
-             "False" )
+             "Please check your permissions and tenant."
+             )
              )
     elif (principal.tenant_id == tenant_id) and ("case:read" in principal.permissions) :
         return None 
@@ -70,16 +70,16 @@ def reserve_call(state: dict, settings: Settings) -> dict:
     if model_calls >= settings.max_model_calls:
         return failed(
             "ITERATION_LIMIT",
-            f"Model calls {model_calls} reached the limit of {settings.max_model_calls}.",
-            "Please check your settings.",
-            "False"
+            f"Model calls {model_calls} reached the limit of {settings.max_model_calls}."
+            #"Please check your settings.",
+            #"False"
         )
     if reserved_tokens + settings.reserve_tokens > settings.total_token_budget:
         return failed(
             "TOKEN_BUDGET",
-            f"Reserved tokens {reserved_tokens} plus reserve {settings.reserve_tokens} exceeds total token budget {settings.total_token_budget}.",
-            "Please check your settings.",      
-            "False"
+            f"Reserved tokens {reserved_tokens} plus reserve {settings.reserve_tokens} exceeds total token budget {settings.total_token_budget}."
+            #,"Please check your settings.",      
+            #"False"
         )
     return {
         "model_calls": model_calls + 1,
@@ -106,9 +106,9 @@ def validate_proposal(evidence: dict, proposal: dict):
     else:
         return failed(
             "EVIDENCE_MISMATCH",
-            "The proposal does not match the evidence.",
-            "Please check the proposal and evidence.",
-            "False"
+            "The proposal does not match the evidence."
+            #,"Please check the proposal and evidence.",
+            #"False"
         )
 
 
@@ -135,29 +135,29 @@ def approval_decision(principal, reply: dict, expected_hash: str, now: int, expi
         return {"ok": False, "failure": failed(
             "INVALID_APPROVAL",
             "The approval value must be a boolean.",
-            "Please provide a valid approval value.",
-            "False"
+            #,"Please provide a valid approval value.",
+            #"False"
         )}
     if reply.get("proposal_hash") != expected_hash:
         return {"ok": False, "failure": failed(
             "STALE_APPROVAL",
             "The proposal hash does not match the expected hash.",
-            "Please check the proposal hash.",
-            "False"
+            #,"Please check the proposal hash.",
+            #"False"
         )}
     if ("task:approve" not in principal.permissions) or (principal.tenant_id != tenant_id):
         return {"ok": False, "failure": failed(
             "APPROVAL_FORBIDDEN",
             "You do not have permission to approve this task.",
-            "Please check your permissions and tenant.",
-            "False"
+            #,"Please check your permissions and tenant.",
+            #"False"
         )}
     if now >= expires_at:
         return {"ok": False, "failure": failed(
             "APPROVAL_EXPIRED",
             "The approval has expired.",
-            "Please request a new approval.",
-            "False"
+            #,"Please request a new approval.",
+            #"False"
         )}
     if reply.get("approved") is True:
         return {"ok": True, "decision": "approved", "approved_by": principal.subject}
