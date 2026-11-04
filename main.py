@@ -1,47 +1,55 @@
-"""Offline demo for the October cohort Refund Desk assignment."""
-from __future__ import annotations
-
-from dotenv import load_dotenv
+"""Run one synthetic billing review. No API key is required."""
 from langgraph.checkpoint.memory import InMemorySaver
-import asyncio
+from langgraph.types import Command
 
-from src.refund_ops import (
-    build_food_graph,
-    build_refund_graph,
-    build_review_loop,
-    build_support_graph,
-    #apply_tool_result,
-)
+from src.contracts import DIRECTORY, Settings
+from src.graph import build_graph
+from src.learner_decisions import TaskLedger
+from src.planner import FakePlanner
 
 
-def main() -> int:
-    load_dotenv()    
-    #asyncio.run(apply_tool_result ("add",{"a":3,"b":2},"ABCD" ))
-    #print(refund_prompt(500,"duplicate"))
-    food = build_food_graph().invoke({"city": "Mysore"})    
-    
-    support = build_support_graph().invoke(
-        {"text": "My computer is not working. It's urgent.", "log": []}
-    )
-    review = build_review_loop().invoke({"draft": "", "attempts": 0, "history": []})
-    print(review)
-    refund = build_refund_graph(InMemorySaver()).invoke(
+class Harness:
+    def __init__(self):
+        self.settings = Settings()
+        self.planner = FakePlanner()
+        self.ledger = TaskLedger()
+        self.principal = DIRECTORY["analyst"]
+        self.clock = lambda: 1000
+
+
+def main() -> None:
+    harness = Harness()
+    graph = build_graph(InMemorySaver(), harness)
+    config = {"configurable": {"thread_id": "demo-sf-1042"}, "recursion_limit": 40}
+    first = graph.invoke(
         {
-            "request_id": "r-auto",
-            "amount": 500,
-            "reason": "Goodwill",
+            "request_id": "request-1",
+            "tenant_id": "acme-in",
+            "case_id": "SF-1042",
+            "scenario": "happy",
+            "status": "new",
+            "model_calls": 0,
+            "reserved_tokens": 0,
+            "reported_tokens": 0,
             "audit": [],
         },
-        {"configurable": {"thread_id": "demo-auto"}},
+        config,
     )
+    print("=== BILLING REVIEW REPORT ===")
+    print("Case: SF-1042")
+    print("Invoice: SAP-8841")
+    print("Status before approval: review")
+    print(f"Tasks before approval: {len(harness.ledger.all())}")
+    print(f"Model calls: {first['model_calls']}")
+    harness.principal = DIRECTORY["manager"]
+    final = graph.invoke(
+        Command(resume={"approved": True, "proposal_hash": first["proposal_hash"]}),
+        config,
+    )
+    print(f"Status after approval: {final['status']}")
+    print(f"Approved by: {final['approved_by']}")
+    print(f"Tasks after approval: {len(harness.ledger.all())}")
 
-    print("=== REFUND DESK REPORT ===")
-    print(f"Food (Mysore): {food['favorite_food']}")
-    print(f"Support priority: {support['priority']}")
-    print(f"Review attempts: {review['attempts']}")
-    print(f"Auto refund status: {refund['status']}")   
-    
-    return 0
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

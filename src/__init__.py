@@ -1,1 +1,1 @@
-"""October cohort assignment package."""
+"""Billing review harness starter."""
