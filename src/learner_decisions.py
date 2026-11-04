@@ -15,7 +15,7 @@ def load_settings(values: dict | None = None) -> Settings:
     Missing keys keep the Settings defaults: 3 calls, 6000 token budget,
     2000 tokens reserved per call, and a 900 second approval window.
     """
-    if values["max_model_calls"] < 1:
+    if int(values.get("max_model_calls")) < 1:
         raise ValueError("at least 1")
     elif values is None:
         return Settings(
@@ -40,8 +40,7 @@ def check_access(principal, tenant_id: str):
     """
     if (principal.tenant_id != tenant_id) or ("case:read" not in principal.permissions):
         return (failed (
-            "ACCESS_DENIED", "You are not allowed to read this case.",
-             "Please check your permissions and tenant."
+            "ACCESS_DENIED", "You are not allowed to read this case."
              )
              )
     elif (principal.tenant_id == tenant_id) and ("case:read" in principal.permissions) :
