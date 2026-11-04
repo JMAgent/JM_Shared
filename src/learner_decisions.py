@@ -16,7 +16,7 @@ def load_settings(values: dict | None = None) -> Settings:
     2000 tokens reserved per call, and a 900 second approval window.
     """
     if values["max_model_calls"] < 1:
-        raise ValueError("max_model_calls must be at least 1")
+        raise ValueError("at least 1")
     elif values is None:
         return Settings(
                     max_model_calls=3, 
@@ -134,28 +134,28 @@ def approval_decision(principal, reply: dict, expected_hash: str, now: int, expi
     if not isinstance(reply.get("approved"), bool):
         return {"ok": False, "failure": failed(
             "INVALID_APPROVAL",
-            "The approval value must be a boolean.",
+            "The approval value must be a boolean."
             #,"Please provide a valid approval value.",
             #"False"
         )}
     if reply.get("proposal_hash") != expected_hash:
         return {"ok": False, "failure": failed(
             "STALE_APPROVAL",
-            "The proposal hash does not match the expected hash.",
+            "The proposal hash does not match the expected hash."
             #,"Please check the proposal hash.",
             #"False"
         )}
     if ("task:approve" not in principal.permissions) or (principal.tenant_id != tenant_id):
         return {"ok": False, "failure": failed(
             "APPROVAL_FORBIDDEN",
-            "You do not have permission to approve this task.",
+            "You do not have permission to approve this task."
             #,"Please check your permissions and tenant.",
             #"False"
         )}
     if now >= expires_at:
         return {"ok": False, "failure": failed(
             "APPROVAL_EXPIRED",
-            "The approval has expired.",
+            "The approval has expired."
             #,"Please request a new approval.",
             #"False"
         )}
@@ -195,7 +195,7 @@ class TaskLedger:
             if self._rows[key] == payload:
                 return {"action_key": key, "task_id": f"TASK-{len(self._rows)}"}
             else:
-                raise ValueError("Payload mismatch for existing key.")
+                raise ValueError("payload")
         else:
             self._rows[key] = payload.copy()
             return {"action_key": key, "task_id": f"TASK-{len(self._rows)}"}
