@@ -15,21 +15,15 @@ def load_settings(values: dict | None = None) -> Settings:
     Missing keys keep the Settings defaults: 3 calls, 6000 token budget,
     2000 tokens reserved per call, and a 900 second approval window.
     """
-    
-    if values is None:
-        return Settings(
-                    max_model_calls=3, 
-                    total_token_budget=  6000,
-                    reserve_tokens= 2000,  
-                    approval_ttl_seconds= 900)
-    elif (values.get("max_model_calls") == '') or (int(values.get("max_model_calls")) < 1):
-            raise ValueError("at least 1")
-    else :
-        return Settings(
-                    max_model_calls=values.get("max_model_calls"), 
-                    total_token_budget=  6000,
-                    reserve_tokens=  2000,  
-                    approval_ttl_seconds=  900)
+    defaults = Settings()
+    max_model_calls = (values or {}).get("max_model_calls", defaults.max_model_calls)
+    try:
+        max_model_calls = int(max_model_calls)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("max_model_calls must be at least 1") from exc
+    if max_model_calls < 1:
+        raise ValueError("at least 1")
+    return Settings(max_model_calls=max_model_calls)
 
 
 def check_access(principal, tenant_id: str):
